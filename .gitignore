@@ -1,0 +1,10 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+.idea/
+.DS_Store
+
+# Setup guide: contains subscription and tenant IDs. Local only.
+files/*.pdf
+files/*.html

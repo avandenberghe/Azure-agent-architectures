@@ -1,0 +1,15 @@
+# The setup guide says `agent-framework`. That is a meta-package resolving to
+# agent-framework-core[all] — every provider integration Microsoft ships — and
+# pip fails on it here with `resolution-too-deep`.
+#
+# agent-framework-foundry is the piece that provides agent_framework.foundry.
+# It pulls agent-framework-core, azure-ai-projects and azure-identity.
+# 46 packages instead of 198.
+agent-framework-foundry
+azure-identity
+python-dotenv
+
+# order_agent.py imports pydantic directly (Field, for the tool's parameter
+# description). It arrives transitively via agent-framework-core, but a direct
+# import deserves a direct declaration.
+pydantic
