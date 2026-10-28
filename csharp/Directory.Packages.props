@@ -1,0 +1,18 @@
+<Project>
+  <!-- Every NuGet version in the solution is set here and nowhere else.
+       Pinned on purpose: the SDK surface moves fast. Bump deliberately. -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Stable line. The 1.26 previews exist, but 1.5.0 already has every type
+         the six steps use, including AsAIAgent(AgentReference). -->
+    <PackageVersion Include="Microsoft.Agents.AI.Foundry" Version="1.5.0" />
+    <PackageVersion Include="Azure.AI.Projects" Version="2.0.0" />
+    <PackageVersion Include="Azure.AI.Projects.Agents" Version="2.0.0" />
+    <PackageVersion Include="Azure.AI.Extensions.OpenAI" Version="2.0.0" />
+    <PackageVersion Include="Azure.Identity" Version="1.21.0" />
+    <PackageVersion Include="Microsoft.Extensions.AI.Abstractions" Version="10.5.1" />
+    <PackageVersion Include="DotNetEnv" Version="3.2.0" />
+  </ItemGroup>
+</Project>
