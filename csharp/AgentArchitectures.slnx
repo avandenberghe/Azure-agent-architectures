@@ -1,3 +1,4 @@
 <Solution>
+  <Project Path="LocalAgent.Hello/LocalAgent.Hello.csproj" />
   <Project Path="Shared/Shared.csproj" />
 </Solution>
