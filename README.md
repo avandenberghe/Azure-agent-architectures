@@ -36,10 +36,56 @@ Two things that surprise people:
 [`docs/foundry-notes.md`](docs/foundry-notes.md) goes further: what a server-side
 agent is, and why organisations adopt Foundry beyond inference.
 
+## Microsoft's AI landscape
+
+Foundry is one of several Microsoft offerings for AI. Microsoft's own decision
+order starts with whether you need an agent at all, and whether you need to
+build one:
+
+**0. No agent.** If the task needs no reasoning (static Q&A, plain content
+generation), use ordinary code or a non-generative model.
+
+**1. Adopt a ready-made agent (SaaS).** Check these first:
+
+| Agent | For |
+|---|---|
+| Microsoft 365 Copilot and its built-in agents (Researcher, Analyst, App Builder, Workflows) | Work across Microsoft 365 data |
+| GitHub Copilot | Coding |
+| Fabric data agents | Questions over data in Microsoft Fabric |
+| Azure Copilot | Your Azure environment |
+| Dynamics 365 agents | Customer service and business processes |
+| Security Copilot | Threat detection and response |
+
+**2. Build your own**, from lightest to most control:
+
+| Option | Kind | Fits |
+|---|---|---|
+| Agent Builder in Microsoft 365 Copilot | No-code; declarative agents on Copilot's own engine | Instructions plus knowledge, shared in your organisation. No actions on external services |
+| Copilot Studio | Low-code SaaS (Power Platform) | Business teams; connectors, workflows, many channels |
+| **Microsoft Foundry** | PaaS, low- or pro-code | Developers; your own models, tools, orchestration and hosting. **This lab** |
+| Microsoft 365 Agents SDK + Agents Toolkit | Pro-code | Multi-channel agents with your own orchestration and models |
+| Teams SDK | Pro-code | Agents that work with several people in Teams channels and meetings |
+| GPUs and containers (AKS, Container Apps) | IaaS | Your own hosted models and agent runtime; full control, full responsibility |
+
+**3. Building blocks**, usable with or without an agent:
+
+| Building block | What it is |
+|---|---|
+| Foundry Models | The model catalogue and deployments. Azure OpenAI now lives here |
+| Foundry Tools | Speech, Vision, Language, Document Intelligence, Translator and more. Formerly Azure AI services / Cognitive Services |
+| Azure AI Search | Indexing and retrieval for RAG |
+| Azure Machine Learning | Training and operating your own ML models |
+| Foundry Local | Running models on your own device |
+
+The names have changed several times: Azure AI Studio became Azure AI Foundry,
+then Microsoft Foundry. Older articles and role names (Azure AI User → Foundry
+User) still use the previous names.
+
 ## Foundry or Copilot Studio?
 
-Both build agents on Microsoft's stack. Microsoft positions them as two build
-paths, for different builders and different levels of control.
+Of the build options above, these are the two people most often weigh against
+each other. Microsoft positions them as its two main build paths, for different
+builders and different levels of control.
 
 | | Copilot Studio | Microsoft Foundry |
 |---|---|---|
@@ -69,10 +115,12 @@ weeks each) and pick the lightest one that meets the requirements.
 tool loop, versioned definitions, sessions — and about comparing that code across
 languages. Copilot Studio deliberately hides all of that.
 
-Sources (checked 2026-10-28): Microsoft Learn,
-[Custom engine agents for Microsoft 365](https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/overview-custom-engine-agent)
-and
-[Cloud Adoption Framework: technology plan for AI agents](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ai-agents/technology-solutions-plan-strategy).
+Sources for this section and the landscape above (checked 2026-10-28), all
+Microsoft Learn:
+[Custom engine agents for Microsoft 365](https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/overview-custom-engine-agent),
+[Cloud Adoption Framework: technology plan for AI agents](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ai-agents/technology-solutions-plan-strategy),
+[Compare tools for declarative agents](https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/declarative-agent-tool-comparison),
+[What is Microsoft Foundry?](https://learn.microsoft.com/en-us/azure/foundry/what-is-foundry).
 Licensing details change often; check
 [Copilot Studio licensing](https://learn.microsoft.com/en-us/microsoft-copilot-studio/requirements-licensing-subscriptions)
 before you plan a budget.
