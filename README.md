@@ -158,6 +158,90 @@ Cost: nothing at rest. You pay per token for inference, and the whole lab costs
 well under one euro to run. Capacity runs out before money does: at 3K TPM, two
 runs back to back can return HTTP 429.
 
+## What an agent is, architecturally
+
+Strip away the products and an agent is a small, specific piece of software: **a
+control loop in which the next step is decided by a language model instead of
+by your code.** Everything else is a component you already know.
+
+```mermaid
+flowchart LR
+    caller(["Caller<br/><i>user, app, other agent</i>"])
+
+    subgraph agent ["Agent (application component)"]
+        direction TB
+        loop["Agent loop<br/><i>orchestrator</i>"]
+        brief["Instructions<br/><i>system prompt: configuration</i>"]
+        registry["Tool registry<br/><i>name + description + JSON schema</i>"]
+        session[("Session state<br/><i>conversation so far</i>")]
+        brief --> loop
+        registry --> loop
+        loop <--> session
+    end
+
+    model["Language model<br/><i>external service, stateless</i>"]
+    tools["Tools<br/><i>your functions, APIs, CLIs</i>"]
+
+    caller -- "goal (prompt)" --> loop
+    loop -- "answer" --> caller
+    loop -- "history + tool schemas" --> model
+    model -- "text, or 'call tool X with Y'" --> loop
+    loop -- "call X(Y)" --> tools
+    tools -- "result (or error, as text)" --> loop
+```
+
+What each box is, in ordinary architecture terms:
+
+| Part | What it is | Who owns it |
+|---|---|---|
+| **Agent loop** | An orchestrator. Send the history to the model; if the model asks for a tool, run it, append the result, repeat; stop when the model answers in text or a limit is hit. This lab's Java version writes it by hand in [`Agent.java`](java/src/main/java/lab/agent/Agent.java), about 90 lines with comments | The framework (Agent Framework) or the platform (Foundry prompt agent) |
+| **Language model** | A stateless remote service: messages in, message out. It never runs anything. It only *proposes* the next step | The provider (Foundry Models, here a gpt-5.4-mini deployment) |
+| **Instructions** | Configuration, not code. They shape what the model proposes but do not enforce anything | You |
+| **Tool registry** | A published interface: a name, a description and a JSON schema per tool. That is all the model sees of your code | You (generated from function signatures in Python and C#, written out by hand in Java) |
+| **Tools** | Adapters to the outside world. Ordinary functions, executed by the loop, never by the model | You |
+| **Session state** | The conversation so far. The model has no memory, so whoever keeps this list *is* the memory | Your process (local agent) or the service (published agent) |
+
+The same loop over time:
+
+```mermaid
+sequenceDiagram
+    participant C as Caller
+    participant L as Agent loop
+    participant M as Model
+    participant T as Tool
+    C->>L: goal
+    loop until the model answers in text, or a limit is hit
+        L->>M: history + tool schemas
+        M-->>L: tool call: name + arguments
+        L->>T: run it
+        T-->>L: result
+        Note over L: append call and result to the history
+    end
+    M-->>L: final text
+    L-->>C: answer
+```
+
+Three consequences follow from that picture, and they're what the lab steps show:
+
+- **"Local" vs "published" agent is a deployment decision, not a different
+  architecture.** In the local steps (`python/local_agent/` and its
+  counterparts) the loop, instructions and session live in your process. In the
+  Foundry-native steps the same boxes live in the Foundry project and your
+  process only holds a name, a version and a session.
+- **The model never acts.** Every side effect happens in a tool your code
+  executes. Safety lives there (read-only tools, idempotency keys, limits on
+  iterations and tokens), not in the instructions.
+- **Instructions are advice.** In the [AWS version of this lab](https://github.com/avandenberghe/AWS-agent-architectures)
+  the Ops agent is told to check every alternative before recommending it, and
+  recommends models it never checked. Anything that must happen every time
+  belongs in code.
+
+In ArchiMate terms: the agent is an *application component* realising an
+*application process* (the loop). The model is an external *application
+service* it uses. Each tool is an *application interface* to another component.
+The instructions and the session are *data objects*. In C4 terms the agent is a
+container, and the model and tools are external systems.
+
 ## The idea
 
 The same small agent is built **twice**, in two folders, using two different
