@@ -258,6 +258,7 @@ sequenceDiagram
     F-->>A: call check_quota("gpt-5-nano")
     A->>Az: az cognitiveservices usage list
     Az-->>A: [{limit: 0}, {limit: 0}]
+    Note over Az: As observed 2026-08-06. By 2026-10-28 Azure had granted<br/>gpt-5-nano quota, and the agent correctly answers "yes".
     A->>F: tool result
     Note over F: limit 0 means cannot deploy. Question also asks for an alternative, so more data is needed.
     F-->>A: call list_deployments()
@@ -392,7 +393,7 @@ Three consequences follow from the right-hand column that are not visible as box
 The gap analysis is not an argument that this design is wrong — it is smaller, and
 smaller has advantages a hosted architecture gives up:
 
-- **Tools are testable without inference.** `cd local_agent && python -c "import ops_agent; print(ops_agent.check_quota('gpt-5-nano'))"` costs nothing. Hosted tools cannot be exercised that cheaply.
+- **Tools are testable without inference.** `cd python/local_agent && ../.venv/bin/python -c "import ops_agent; print(ops_agent.check_quota('gpt-5-nano'))"` costs nothing (C#: `dotnet run --project csharp/LocalAgent.Ops -- --tools-only`). Hosted tools cannot be exercised that cheaply.
 - **The whole system is three files you can read in ten minutes.** No deployment, no identity provisioning, no cold-start.
 - **The control-plane/data-plane split is drawn honestly**, and that distinction is true at any scale. It is the part of these diagrams that transfers.
 

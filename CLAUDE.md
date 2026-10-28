@@ -1,13 +1,16 @@
 # Azure agents lab
 
-Learning project: building agents on Microsoft Foundry with Python.
+Learning project: building agents on Microsoft Foundry, the same lab once per
+language — Python (`python/`) and C# (`csharp/`) so far, Java and PHP planned.
+The point is to separate the agent *pattern* from the language and SDK;
+`docs/language-comparison.md` sets the versions side by side.
 
 ## Layout
 
 **Two folders, two diverging architectures.** The split is the point of the project:
 the same lab, built twice, so the difference is legible.
 
-### `local_agent/` — the agent lives in the Python process
+### `python/local_agent/` — the agent lives in the Python process
 
 Follows the setup guide. The agent is an in-memory object; nothing exists in Azure
 except the model deployment it calls.
@@ -18,10 +21,11 @@ except the model deployment it calls.
   hardcoded string, so it shows the tool-calling *mechanism* and nothing else.
 - `ops_agent.py` — not from the guide. Two read-only `az` tools where the second
   call depends on what the first returns: asked whether `gpt-5-nano` is deployable,
-  the agent checks quota, finds `limit: 0`, and only then looks at existing
-  deployments to suggest an alternative. This is the first one with an actual loop.
+  the agent checks quota, found `limit: 0` (as of 2026-08; quota has since been
+  granted), and only then looks at existing deployments to suggest an
+  alternative. This is the first one with an actual loop.
 
-### `foundry_native/` — the agent lives in the Foundry project
+### `python/foundry_native/` — the agent lives in the Foundry project
 
 The agent is a named, versioned resource. The scripts hold no behaviour.
 
@@ -31,10 +35,27 @@ The agent is a named, versioned resource. The scripts hold no behaviour.
   Contains no instructions and no model name.
 - `cleanup.py` — lists versions; deletes the agent with `--delete`.
 
+Python publishes the agent `lab-assistant`.
+
+### `csharp/` — the same six steps in C#
+
+`AgentArchitectures.slnx`, one console project per Python script, plus `Shared/`
+(`Settings.Load()`, `Settings.Required()`, `Settings.Credential`) — nothing
+agent-related lives in Shared.
+
+- `LocalAgent.Hello`, `LocalAgent.Order`, `LocalAgent.Ops` — `AsAIAgent(model:, …)`,
+  in-process, nothing created in Foundry. `Ops` takes `--tools-only` to run both
+  `az` tools without inference (the C# stand-in for Python's `python -c` check).
+- `FoundryNative.Publish`, `FoundryNative.Run [version]`, `FoundryNative.Cleanup
+  [--delete]` — publish and use the agent `lab-assistant-csharp`. One agent per
+  language, so either cleanup leaves the other language's agent alone.
+- Same prompts, instructions and output as the Python scripts, by design.
+
 Supporting files:
 
-- `.env.example` — copy to `.env` and fill in. `load_dotenv()` walks up from the
-  calling script, so running from inside either folder resolves the root `.env`.
+- `.env.example` — copy to `.env` and fill in. Both languages walk up from the
+  working directory to find the root `.env`, and neither overrides variables
+  already set in the environment.
 - `files/` — `provision.sh` (steps 1-8 as one script; already run, the resources it
   creates exist) and `azure-agent-setup-guide_1.pdf`, the setup guide.
 - `docs/architecture.md` — C4 for `local_agent/`, annotated A1-A6 where it fails as
@@ -50,18 +71,28 @@ been deleted. Both are covered under constraints below.
 ## Commands
 
 ```bash
-source .venv/bin/activate
-pip install -r requirements.txt
+source python/.venv/bin/activate
+pip install -r python/requirements.txt   # -c constraints.txt pins transitives
 set -a && source .env && set +a          # identifiers live in .env, never in tracked files
 az login --tenant "$AZURE_TENANT_ID"     # explicit; plain `az login` also works now
 az account set --subscription "$AZURE_SUBSCRIPTION_ID"
 
-python local_agent/hello_agent.py        # or order_agent.py, ops_agent.py
+python python/local_agent/hello_agent.py   # or order_agent.py, ops_agent.py
 
-cd foundry_native
+cd python/foundry_native
 python publish_agent.py                  # once — creates lab-assistant v1
 python run_agent.py 1                    # connect and hold a session
 python cleanup.py                        # list; --delete to remove
+```
+
+```bash
+# C# — from the repo root
+dotnet build csharp/AgentArchitectures.slnx
+dotnet run --project csharp/LocalAgent.Hello          # or .Order, .Ops
+dotnet run --project csharp/LocalAgent.Ops -- --tools-only
+dotnet run --project csharp/FoundryNative.Publish     # creates lab-assistant-csharp
+dotnet run --project csharp/FoundryNative.Run -- 1
+dotnet run --project csharp/FoundryNative.Cleanup     # -- --delete to remove
 ```
 
 There is no test suite or linter configured. Verification is running a script and
@@ -69,7 +100,7 @@ seeing an answer print. `ops_agent.py`'s tools are plain functions, so they can 
 exercised without spending tokens:
 
 ```bash
-cd local_agent && python -c "import ops_agent; print(ops_agent.check_quota('gpt-5-nano'))"
+cd python/local_agent && ../.venv/bin/python -c "import ops_agent; print(ops_agent.check_quota('gpt-5-nano'))"
 ```
 
 ## Cost of the two architectures
@@ -125,10 +156,17 @@ rather than a fix for a real hazard.
 
 ## Conventions
 
-- Python 3.14 in `.venv` (Homebrew `python@3.14`). Never install into system Python.
+- Python 3.14 in `python/.venv` (Homebrew `python@3.14`). Never install into system Python.
   The setup guide said 3.12; the actual environment is newer. The package set in
   `requirements.txt` installs and imports cleanly on 3.14 — verified, not assumed.
-- Settings live in `.env`, loaded with python-dotenv. Never hard-code the endpoint.
+- .NET SDK 10.0.400 in `~/.dotnet` (user-local, arm64). NOT Homebrew — two SDKs
+  would let Rider and the terminal resolve different ones. `csharp/global.json`
+  pins it. `~/.dotnet` must be on PATH with `DOTNET_ROOT` set.
+- Every version is pinned. Python: `python/requirements.txt` (direct) +
+  `python/constraints.txt` (full set). C#: `csharp/Directory.Packages.props`
+  (direct, central package management) + `packages.lock.json` per project.
+- C# builds with `TreatWarningsAsErrors` and nullable enabled.
+- Settings live in `.env`, loaded with python-dotenv / DotNetEnv. Never hard-code the endpoint.
 - Shell is zsh on macOS.
 - Auth is `AzureCliCredential` locally; `ManagedIdentityCredential` in anything deployed.
 
@@ -141,7 +179,29 @@ rather than a fix for a real hazard.
   46 packages instead of 198. PyCharm's package UI compounds this: it times out at
   5 minutes and offers `azure-core`, which is not `azure-identity` and will not
   satisfy the import.
-- Capacity is 3K TPM. HTTP 429 means rate limiting, not broken code.
+- Pin transitive Python packages too. On 2026-10-28 a fresh venv with only the four
+  direct pins resolved `openai` 3.x / `httpx2`, and `azure-ai-projects` 2.x failed
+  with `No module named 'httpx'`. `constraints.txt` is the frozen known-good set.
+- C# packages: stable `Microsoft.Agents.AI.Foundry` 1.5.0 + `Azure.AI.Projects`,
+  `.Agents`, `Extensions.OpenAI` 2.0.0 cover all six steps; the 1.26 previews are
+  not needed. Names differ from Microsoft's docs and from Python:
+  - the prompt agent definition is `DeclarativeAgentDefinition` (docs say
+    `PromptAgentDefinition`); there is no `to_prompt_agent()` equivalent.
+  - admin operations hang off `AIProjectClient.AgentAdministrationClient`
+    (older blogs: `.Agents`); sessions are `AgentSession` (older: `AgentThread`).
+  - naming the `FoundryAgent` type raises `OPENAI001` (evaluation-only), and with
+    TreatWarningsAsErrors that breaks the build. `AsAIAgent(AgentReference)` does not
+    raise it — hold the result as `AIAgent`.
+- `AzureCliCredential` shells out to `az`, so in a Dock-launched IDE *every*
+  program fails auth, not just `ops_agent`. Rider: each `launchSettings.json` sets
+  PATH. PyCharm: set PATH in the run configuration.
+- `dotnet run` honours `launchSettings.json`, so its PATH replaces the shell's
+  PATH for the program even in the terminal. It includes `/opt/homebrew/bin`.
+- Capacity is 3K TPM. HTTP 429 means rate limiting, not broken code. Two agent
+  runs back to back are enough to hit it.
+- gpt-5-nano quota was 0 on 2026-08-06; by 2026-10-28 it was granted (5000
+  GlobalStandard / 2000 DataZoneStandard). The Ops agent now correctly answers
+  "yes" — the docs' `limit: 0` walkthrough describes the original state.
 - Quota is granted per model + SKU + region. gpt-5.4-mini has NO GlobalStandard
   quota here — only DataZoneStandard (200) and GlobalBatch.
 - `az` lives in /opt/homebrew/bin. GUI-launched apps do not inherit it on PATH;
@@ -160,53 +220,15 @@ rather than a fix for a real hazard.
 - Provisioning by CLI rather than portal, for reproducibility and because the
   portal hides prerequisites (e.g. resource provider registration).
 
-## Assessment: this is not yet a Foundry tutorial
+## Assessment (2026-08-06) — acted on
 
-Recorded 2026-08-06. Nothing below has been acted on.
-
-The three scripts work and are correct, but they teach the `agent-framework` SDK
-rather than the Foundry platform. All three do the same thing — build a client,
-wrap it in an agent, call `run()`. Swapping `agent_framework.foundry` for
-`agent_framework.openai` would leave them almost unchanged. A learner finishes
-knowing an API surface, with no answer to "why Foundry rather than any model API?"
-
-Foundry is currently being used as an inference endpoint and nothing else. The
-deployment diagram in `docs/architecture.md` shows why: the agent, the tools and
-the loop all run locally; only completions happen in Azure. That is also the
-reason portal tracing does not work — it is a consequence of the design, not a
-configuration mistake.
-
-**What the library offers that the project ignores**
-
-| Available in `agent_framework.foundry` | What the project uses instead |
-|---|---|
-| `FoundryAgent` — server-side agent with middleware and telemetry | `client.as_agent()`, a client-side object that dies with the process |
-| `FoundryEvals` — evaluation backed by Foundry | nothing |
-| `FoundryToolbox`, `FoundrySessionStore` (needs `agent-framework-foundry-hosting`) | local functions, no persistence |
-| `FileSearchConfig` (needs `agent-framework-azure-contentunderstanding`) | nothing |
-
-**Three concrete gaps**
-
-1. The agent is client-side. `as_agent()` builds a Python object; `FoundryAgent`
-   creates a resource in the project with an ID, visible in the portal. That single
-   distinction separates using Foundry from using a model.
-2. No conversation state. Every run starts cold. Session management is something
-   Foundry provides and the project does not use.
-3. ~~`ops_agent.py` hardcodes the resource and resource-group names, so nobody
-   else can run it.~~ **Fixed.** Resource, group and region now come from `.env`
-   via a `_required()` helper that fails with a readable message when unset.
-
-**Proposed direction, not yet approved**
-
-Rebuild around `FoundryAgent` so the agent becomes a real project resource.
-Portal visibility, sessions and working tracing all follow from that one change,
-and it gives the project the checkpoint it currently lacks: open ai.azure.com and
-see the thing you just made.
-
-Two open questions before starting: it creates a persistent resource in the
-project (a real write — needs explicit approval), and it is unverified whether
-`FoundryAgent` requires `agent-framework-foundry-hosting`, as `FoundryToolbox`
-and `FoundrySessionStore` do.
+The original assessment found the first three scripts taught the SDK, not the
+platform: Foundry was used as an inference endpoint only. Its proposed direction —
+make the agent a real project resource via `FoundryAgent` — was implemented as
+`foundry_native/` (now `python/foundry_native/`, and `csharp/FoundryNative.*`).
+Per `docs/architecture2.md`, A1–A4 are resolved; A5 and A6 remain open (a
+PromptAgent cannot run local `az` tools, so tools were dropped rather than moved
+server-side). `FoundryAgent` did not need `agent-framework-foundry-hosting`.
 
 Background on what Foundry offers beyond inference — server-side
 PromptAgents/HostedAgents, grounding, evaluation, hosting — is in

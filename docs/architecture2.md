@@ -14,8 +14,9 @@ client.as_agent(...)                 FoundryAgent(agent_name="lab-assistant",
                                        → reference to a published resource
 ```
 
-Code lives in `foundry_native/`. The iteration-1 scripts remain at the project
-root, unchanged, for comparison.
+Code lives in `python/foundry_native/`. The iteration-1 scripts remain in
+`python/local_agent/`, unchanged, for comparison. The C# counterparts are the
+`csharp/FoundryNative.*` and `csharp/LocalAgent.*` projects.
 
 ---
 
