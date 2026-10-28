@@ -46,9 +46,11 @@ try
 }
 catch (ClientResultException ex) when (ex.Status is 400 or 404)
 {
+    // 400 also covers other bad requests, so pass on the service's own reason.
+    var reason = ex.Message.Split('\n', 2)[0];
     Console.Error.WriteLine(
-        $"{AgentName} version {version} not found. " +
-        "Run FoundryNative.Publish first, or pass an existing version.");
+        $"{AgentName} version {version} could not be used ({reason}). " +
+        "If it doesn't exist, run FoundryNative.Publish first or pass an existing version.");
     return 1;
 }
 Console.WriteLine($"turn 1: {first.Text}");

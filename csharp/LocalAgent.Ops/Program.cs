@@ -25,22 +25,30 @@ using Microsoft.Extensions.AI;
 
 Settings.Load();
 
+// Read every setting before anything else, so a missing one stops the program
+// here — not in the middle of a tool call, after an inference round trip.
+// Python gets this for free: ops_agent.py reads them at import time.
+var tools = new OpsTools(
+    Settings.Required("AZURE_FOUNDRY_RESOURCE"),
+    Settings.Required("AZURE_RESOURCE_GROUP"),
+    Settings.Required("AZURE_REGION"));
+var endpoint = new Uri(Settings.Required("FOUNDRY_PROJECT_ENDPOINT"));
+var model = Settings.Required("FOUNDRY_MODEL");
+
 // The tools are ordinary methods, so they can be exercised without spending
 // tokens. Python does this with `python -c "import ops_agent; ..."`; a compiled
 // program has no such side door, so it gets a flag instead.
 if (args.Contains("--tools-only"))
 {
-    Console.WriteLine(await OpsTools.CheckQuotaAsync("gpt-5-nano"));
-    Console.WriteLine(await OpsTools.ListDeploymentsAsync());
+    Console.WriteLine(await tools.CheckQuotaAsync("gpt-5-nano"));
+    Console.WriteLine(await tools.ListDeploymentsAsync());
     return;
 }
 
-var client = new AIProjectClient(
-    new Uri(Settings.Required("FOUNDRY_PROJECT_ENDPOINT")),
-    Settings.Credential);
+var client = new AIProjectClient(endpoint, Settings.Credential);
 
 AIAgent agent = client.AsAIAgent(
-    model: Settings.Required("FOUNDRY_MODEL"),
+    model: model,
     name: "OpsAgent",
     instructions:
         "You help with Azure Foundry deployments. " +
@@ -49,8 +57,8 @@ AIAgent agent = client.AsAIAgent(
         "allocation exists, which is different from the model being absent.",
     tools:
     [
-        AIFunctionFactory.Create(OpsTools.ListDeploymentsAsync),
-        AIFunctionFactory.Create(OpsTools.CheckQuotaAsync),
+        AIFunctionFactory.Create(tools.ListDeploymentsAsync),
+        AIFunctionFactory.Create(tools.CheckQuotaAsync),
     ]);
 
 var result = await agent.RunAsync(

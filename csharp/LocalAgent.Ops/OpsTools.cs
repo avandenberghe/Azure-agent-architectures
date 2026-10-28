@@ -1,20 +1,17 @@
 using System.ComponentModel;
 using System.Diagnostics;
-using AgentArchitectures.Shared;
 
 /// <summary>
 /// Both tools are read-only `az` calls. Nothing here creates or deletes anything.
+/// The resource, group and region are passed in, so Program.cs reads them at
+/// startup and a missing setting fails before any tokens are spent.
 /// </summary>
-static class OpsTools
+sealed class OpsTools(string resource, string group, string region)
 {
-    static readonly string Resource = Settings.Required("AZURE_FOUNDRY_RESOURCE");
-    static readonly string Group = Settings.Required("AZURE_RESOURCE_GROUP");
-    static readonly string Region = Settings.Required("AZURE_REGION");
-
     [Description("List the model deployments that already exist in this Foundry resource.")]
-    public static Task<string> ListDeploymentsAsync() => AzAsync(
+    public Task<string> ListDeploymentsAsync() => AzAsync(
         "cognitiveservices", "account", "deployment", "list",
-        "-n", Resource, "-g", Group,
+        "-n", resource, "-g", group,
         "--query", "[].{deployment:name, model:properties.model.name, sku:sku.name}",
         "-o", "json");
 
@@ -22,9 +19,9 @@ static class OpsTools
         "Check deployment quota for a model. Quota is granted per model, SKU and " +
         "region, and is separate from whether the model appears in the catalogue. " +
         "A limit of 0 means no allocation was ever granted.")]
-    public static Task<string> CheckQuotaAsync(
+    public Task<string> CheckQuotaAsync(
         [Description("Model family to check, e.g. 'gpt-5-nano'")] string model) => AzAsync(
-        "cognitiveservices", "usage", "list", "-l", Region,
+        "cognitiveservices", "usage", "list", "-l", region,
         "--query", $"[?contains(name.value, '{model}')].{{sku:name.value, used:currentValue, limit:limit}}",
         "-o", "json");
 
@@ -49,7 +46,7 @@ static class OpsTools
         {
             process = Process.Start(start)!;
         }
-        catch (System.ComponentModel.Win32Exception)
+        catch (Win32Exception)
         {
             // az lives in /opt/homebrew/bin; GUI-launched Rider does not inherit it.
             return "ERROR: 'az' not found on PATH.";

@@ -24,7 +24,7 @@ be added as a new column in the table and a new block in each section.
 | Server-side agent | `FoundryAgent(agent_name=, agent_version=)` | `client.AsAIAgent(new AgentReference(name, version))` → `AIAgent` |
 | Session | `agent.create_session()`, `run(..., session=)` | `await agent.CreateSessionAsync()`, `RunAsync(..., session)` |
 | List / delete | `agents.list()`, `list_versions()`, `delete()` | `GetAgentsAsync()`, `GetAgentVersionsAsync()`, `DeleteAgentAsync()` |
-| Config | `load_dotenv()`: walks up, never overrides | `Env.NoClobber().TraversePath().Load()`: same behaviour |
+| Config | `load_dotenv()`: walks up from the *script's* folder, never overrides | `Env.NoClobber().TraversePath().Load()`: walks up from the *working* folder, never overrides |
 | Credential | `AzureCliCredential()` | `new AzureCliCredential()` |
 | Version pinning | `requirements.txt` (direct) + `constraints.txt` (transitive) | `Directory.Packages.props` (direct) + `packages.lock.json` (transitive) |
 | Server-side agent name | `lab-assistant` | `lab-assistant-csharp` |
@@ -115,9 +115,12 @@ def _az(*args):
 ```
 
 ```csharp
-[Description("Check deployment quota for a model. ...")]
-public static Task<string> CheckQuotaAsync([Description("...")] string model)
-    => AzAsync("cognitiveservices", "usage", "list", "-l", Region, "--query", ...);
+sealed class OpsTools(string resource, string group, string region)
+{
+    [Description("Check deployment quota for a model. ...")]
+    public Task<string> CheckQuotaAsync([Description("...")] string model)
+        => AzAsync("cognitiveservices", "usage", "list", "-l", region, "--query", ...);
+}
 
 static async Task<string> AzAsync(params string[] args)
 {
@@ -135,17 +138,23 @@ Tools *return* their errors as text instead of throwing, so the model can read a
 failure and work around it. Each tool call costs another inference round trip.
 
 **Language-specific.**
+- Python reads its settings at import time, so a missing one fails before any
+  inference. C# gets the same behaviour by reading them in `Program.cs` and
+  passing them to an `OpsTools` instance; the tools are then instance methods.
 - Python's tools are synchronous. The C# tools are `async Task<string>`, and the
   framework awaits them.
 - Both pass arguments as a list (`["az", *args]` / `ArgumentList`), never as a
-  shell string. Same reason in both languages: no quoting bugs, no injection.
+  shell string, so there is no shell injection. The model-supplied `model` is
+  still interpolated into the JMESPath `--query` in both languages: a tool
+  argument is untrusted input, wherever it ends up.
 - **Exercising the tools without spending tokens.** Python can import the module
   and call a function: `python -c "import ops_agent; ..."`. A compiled program
   has no such side door, so C# has a flag instead:
   `dotnet run --project csharp/LocalAgent.Ops -- --tools-only`.
 - The scenario has changed since the lab was written. On 2026-08-06 the
-  gpt-5-nano quota was 0. By 2026-10-28 it was granted, and both versions
-  correctly answer "yes".
+  gpt-5-nano quota was 0. By 2026-10-28 it had been granted, and the C# run on
+  that date correctly answered "yes". Python reads the same data, so it should
+  give the same answer, but nobody has rerun it since.
 
 ## 4. Publish: the agent becomes a project resource
 
@@ -229,10 +238,11 @@ if (args.Contains("--delete")) await agents.DeleteAgentAsync(AgentName);
 its versions. Without `--delete` nothing is deleted.
 
 **Language-specific.**
-- Python iterates paged results with a plain `for`. C# uses `await foreach`
-  over `IAsyncEnumerable`, so each page is fetched lazily as the loop needs it.
-- C# reports a missing agent as a normal message with exit code 1
-  (`ClientResultException` with status 404). Python lets the exception surface.
+- Both fetch pages lazily as the loop advances. Only the syntax differs: a plain
+  `for` over `ItemPaged` in Python, `await foreach` over `IAsyncEnumerable` in C#.
+- C# is written to report a missing agent as a normal message with exit code 1
+  (`ClientResultException` with status 404). That path hasn't been exercised
+  against the live service yet. Python lets the exception surface.
 - Listing the versions of an agent that doesn't exist returns an empty list in
   both languages, not an error.
 

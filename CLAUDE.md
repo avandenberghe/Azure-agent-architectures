@@ -53,9 +53,9 @@ agent-related lives in Shared.
 
 Supporting files:
 
-- `.env.example` — copy to `.env` and fill in. Both languages walk up from the
-  working directory to find the root `.env`, and neither overrides variables
-  already set in the environment.
+- `.env.example` — copy to `.env` and fill in. Python's `load_dotenv()` walks up
+  from the *script's* folder, C#'s `Settings.Load()` from the *working* folder;
+  neither overrides variables already set in the environment.
 - `files/` — `provision.sh` (steps 1-8 as one script; already run, the resources it
   creates exist) and `azure-agent-setup-guide_1.pdf`, the setup guide.
 - `docs/architecture.md` — C4 for `local_agent/`, annotated A1-A6 where it fails as

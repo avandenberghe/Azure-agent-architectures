@@ -43,15 +43,15 @@ az account set --subscription "$AZURE_SUBSCRIPTION_ID"
 ```
 
 `.env` is the only place real identifiers live. Nothing tracked in git contains a
-subscription ID, tenant ID or project endpoint. Every language finds it by walking
-up from where you run.
+subscription ID, tenant ID or project endpoint. Python looks for it upward from the
+script's folder, C# upward from the folder you run in. Either way, every command
+below, run from the repo root, finds the root `.env`.
 
 ### Python setup
 
 ```bash
-cd python
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt      # pulls in constraints.txt: everything pinned
+python3 -m venv python/.venv && source python/.venv/bin/activate
+pip install -r python/requirements.txt   # pulls in constraints.txt: everything pinned
 ```
 
 ### C# setup
