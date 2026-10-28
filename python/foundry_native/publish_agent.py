@@ -1,6 +1,6 @@
 """Publish an agent INTO the Foundry project, as a named, versioned resource.
 
-This is the difference the sibling scripts in the project root do not show.
+This is the difference the scripts in local_agent/ do not show.
 `client.as_agent()` builds a Python object that dies with the process. Here the
 agent definition is sent to Foundry and becomes a resource you can see in the
 portal, connect to from anywhere, and version.
@@ -28,7 +28,7 @@ def main():
     endpoint = os.environ["FOUNDRY_PROJECT_ENDPOINT"]
     credential = AzureCliCredential()
 
-    # Step 1 — describe the agent locally. Identical to what the root scripts do:
+    # Step 1 — describe the agent locally. Identical to what the local_agent/ scripts do:
     # at this point it is still just a Python object with no server-side existence.
     client = FoundryChatClient(
         project_endpoint=endpoint,

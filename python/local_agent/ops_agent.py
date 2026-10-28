@@ -36,7 +36,7 @@ def _required(name: str) -> str:
     if not value:
         raise SystemExit(
             f"{name} is not set. Copy .env.example to .env and fill it in, "
-            f"then run this from the project root or from local_agent/."
+            f"then run this from anywhere inside the repo."
         )
     return value
 

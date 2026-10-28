@@ -8,3 +8,8 @@ __pycache__/
 # Setup guide: contains subscription and tenant IDs. Local only.
 files/*.pdf
 files/*.html
+
+# .NET
+bin/
+obj/
+*.user

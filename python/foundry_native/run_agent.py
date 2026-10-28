@@ -1,6 +1,6 @@
 """Connect to the published agent and hold a two-turn conversation.
 
-Two things here that the root scripts cannot do:
+Two things here that the local_agent/ scripts cannot do:
 
 1. The agent is not defined in this file. It is referenced by name and version.
    The instructions live in Foundry — edit them in the portal, re-run this, and

@@ -5,11 +5,15 @@
 # agent-framework-foundry is the piece that provides agent_framework.foundry.
 # It pulls agent-framework-core, azure-ai-projects and azure-identity.
 # 46 packages instead of 198.
-agent-framework-foundry
-azure-identity
-python-dotenv
+agent-framework-foundry==1.10.4
+azure-identity==1.25.3
+python-dotenv==1.2.2
 
 # order_agent.py imports pydantic directly (Field, for the tool's parameter
 # description). It arrives transitively via agent-framework-core, but a direct
 # import deserves a direct declaration.
-pydantic
+pydantic==2.13.4
+
+# Pinned on purpose: the SDK surface moves fast. Bump deliberately.
+# Transitive packages are pinned too, in constraints.txt.
+-c constraints.txt
