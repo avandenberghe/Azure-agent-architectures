@@ -1,0 +1,14 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="PublishAgent" type="Application" factoryName="Application">
+    <envs>
+      <!-- A Dock-launched IDE does not inherit the shell PATH; AzureCliCredential and the Ops tools need az. -->
+      <env name="PATH" value="/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin" />
+    </envs>
+    <option name="MAIN_CLASS_NAME" value="lab.foundry.PublishAgent" />
+    <module name="agent-architectures" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

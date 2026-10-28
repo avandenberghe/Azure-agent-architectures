@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Java version of the Foundry agent lab. One Maven module; each lab step is a
+  class with a main() method (see README.md for how to run them).
+
+  Every version below is exact. Maven resolves transitive dependencies to the
+  versions the libraries themselves declare (no ranges here), so the same pom
+  always yields the same classpath; that's what python/constraints.txt and the
+  C# packages.lock.json files have to add explicitly.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>lab</groupId>
+  <artifactId>agent-architectures</artifactId>
+  <version>1.0</version>
+
+  <properties>
+    <maven.compiler.release>21</maven.compiler.release>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
+  <dependencies>
+    <!-- Foundry agents: create/list/delete versions, call a published agent.
+         Brings openai-java, which does the actual model calls. -->
+    <dependency>
+      <groupId>com.azure</groupId>
+      <artifactId>azure-ai-agents</artifactId>
+      <version>2.8.0</version>
+    </dependency>
+    <!-- AzureCliCredential: the identity `az login` holds. -->
+    <dependency>
+      <groupId>com.azure</groupId>
+      <artifactId>azure-identity</artifactId>
+      <version>1.18.7</version>
+    </dependency>
+    <!-- Reads the repo-root .env. -->
+    <dependency>
+      <groupId>io.github.cdimascio</groupId>
+      <artifactId>dotenv-java</artifactId>
+      <version>3.2.0</version>
+    </dependency>
+    <!-- Parses the JSON arguments the model sends with a tool call. Arrives
+         transitively via openai-java; a direct import deserves a direct
+         declaration. Same version openai-java uses. -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>2.18.11</version>
+    </dependency>
+    <!-- The Azure SDK logs through SLF4J. Without a binding, SLF4J prints a
+         warning on every run; this one discards logs quietly. -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-nop</artifactId>
+      <version>1.7.36</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.15.0</version>
+        <configuration>
+          <compilerArgs>
+            <arg>-Xlint:all</arg>
+            <arg>-Werror</arg>
+          </compilerArgs>
+        </configuration>
+      </plugin>
+      <plugin>
+        <!-- Fails the build early on the wrong JDK or Maven, rather than with
+             a confusing compiler error later. -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <version>3.6.3</version>
+        <executions>
+          <execution>
+            <id>enforce</id>
+            <goals><goal>enforce</goal></goals>
+            <configuration>
+              <rules>
+                <requireJavaVersion><version>[21,)</version></requireJavaVersion>
+                <requireMavenVersion><version>[3.9,)</version></requireMavenVersion>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <!-- `mvn exec:java -Dexec.mainClass=lab.local.HelloAgent` runs a step
+             from the terminal. IntelliJ runs the main() methods directly. -->
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>3.6.4</version>
+      </plugin>
+    </plugins>
+  </build>
+</project>

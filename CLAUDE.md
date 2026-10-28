@@ -1,7 +1,7 @@
 # Azure agents lab
 
 Learning project: building agents on Microsoft Foundry, the same lab once per
-language — Python (`python/`) and C# (`csharp/`) so far, Java and PHP planned.
+language — Python (`python/`), C# (`csharp/`) and Java (`java/`) so far, PHP planned.
 The point is to separate the agent *pattern* from the language and SDK;
 `docs/language-comparison.md` sets the versions side by side.
 
@@ -51,6 +51,21 @@ agent-related lives in Shared.
   language, so either cleanup leaves the other language's agent alone.
 - Same prompts, instructions and output as the Python scripts, by design.
 
+### `java/` — the same six steps in Java 21 / Maven
+
+One Maven module. Main classes in `lab.local` (`HelloAgent`, `OrderAgent`,
+`OpsAgent` + `OpsTools`) and `lab.foundry` (`PublishAgent`, `RunAgent`,
+`Cleanup`); agent name `lab-assistant-java`.
+
+- No Agent Framework SDK exists for Java, so `lab.agent.Agent` and `lab.agent.Tool`
+  are the lab's own: `Agent.run()` is the hand-written tool loop (bounded by
+  `MAX_ROUNDS`). `-Dagent.trace=true` prints each round to stderr. Commented
+  heavily on purpose — it's the file that shows what the frameworks hide.
+- Local agents call the Responses API with `store(false)` and resend history;
+  remote agents use a server conversation and select the version per call with
+  `AzureCreateResponseOptions.setAgentReference(new AgentReference(name).setVersion(v))`.
+- `java/.run/*.run.xml` are IntelliJ run configurations that set PATH for `az`.
+
 Supporting files:
 
 - `.env.example` — copy to `.env` and fill in. Python's `load_dotenv()` walks up
@@ -93,6 +108,16 @@ dotnet run --project csharp/LocalAgent.Ops -- --tools-only
 dotnet run --project csharp/FoundryNative.Publish     # creates lab-assistant-csharp
 dotnet run --project csharp/FoundryNative.Run -- 1
 dotnet run --project csharp/FoundryNative.Cleanup     # -- --delete to remove
+```
+
+```bash
+# Java — from the repo root (Corretto 21, Maven 3.10)
+mvn -q -f java/pom.xml compile
+mvn -q -f java/pom.xml exec:java -Dexec.mainClass=lab.local.HelloAgent   # or OrderAgent, OpsAgent
+mvn -q -f java/pom.xml exec:java -Dexec.mainClass=lab.local.OpsAgent -Dexec.args=--tools-only
+mvn -q -f java/pom.xml exec:java -Dexec.mainClass=lab.foundry.PublishAgent   # creates lab-assistant-java
+mvn -q -f java/pom.xml exec:java -Dexec.mainClass=lab.foundry.RunAgent -Dexec.args=1
+mvn -q -f java/pom.xml exec:java -Dexec.mainClass=lab.foundry.Cleanup   # -Dexec.args=--delete removes it
 ```
 
 There is no test suite or linter configured. Verification is running a script and
@@ -166,6 +191,9 @@ rather than a fix for a real hazard.
   `python/constraints.txt` (full set). C#: `csharp/Directory.Packages.props`
   (direct, central package management) + `packages.lock.json` per project.
 - C# builds with `TreatWarningsAsErrors` and nullable enabled.
+- Java: Amazon Corretto 21 (the system default JDK) + Maven 3.10. Homebrew's
+  OpenJDK 27 is installed but unused. The build uses `-Xlint:all -Werror` and the
+  enforcer plugin (JDK 21+, Maven 3.9+).
 - Settings live in `.env`, loaded with python-dotenv / DotNetEnv. Never hard-code the endpoint.
 - Shell is zsh on macOS.
 - Auth is `AzureCliCredential` locally; `ManagedIdentityCredential` in anything deployed.

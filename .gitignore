@@ -13,3 +13,6 @@ files/*.html
 bin/
 obj/
 *.user
+
+# Java
+target/

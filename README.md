@@ -163,8 +163,8 @@ runs back to back can return HTTP 429.
 The same small agent is built **twice**, in two folders, using two different
 architectures. Reading them side by side is the point.
 
-The whole lab then exists once per language: `python/` and `csharp/` today, with
-Java and PHP to follow. What survives a change of language is the agent pattern;
+The whole lab then exists once per language: `python/`, `csharp/` and `java/`
+today, with PHP to follow. What survives a change of language is the agent pattern;
 what changes is the SDK. [`docs/language-comparison.md`](docs/language-comparison.md)
 sets them side by side.
 
@@ -187,6 +187,7 @@ one and almost nothing changes, which means it is not really teaching you Foundr
 |---|---|---|---|
 | [`python/`](python/) | Python 3.14, `agent-framework-foundry` | `lab-assistant` | [`python/README.md`](python/README.md) |
 | [`csharp/`](csharp/) | C# / .NET 10, `Microsoft.Agents.AI.Foundry` | `lab-assistant-csharp` | [`csharp/README.md`](csharp/README.md) |
+| [`java/`](java/) | Java 21 / Maven, `azure-ai-agents` + a hand-written agent and tool loop | `lab-assistant-java` | [`java/README.md`](java/README.md) |
 
 Every language implements the same six steps, with the same prompts and output:
 
@@ -200,6 +201,10 @@ Every language implements the same six steps, with the same prompts and output:
 | Cleanup | Lists agents and versions; deletes the agent on request |
 
 Each language publishes its own agent, so cleaning up one never breaks another.
+
+Python and C# use Microsoft's Agent Framework, which provides the agent and runs
+the tool loop for you. It has no Java SDK, so the Java version writes its own
+small agent class. That makes Java the place to read what the framework does.
 
 ## Shared setup
 
