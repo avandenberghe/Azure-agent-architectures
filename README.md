@@ -5,6 +5,111 @@ you beyond a model endpoint, and what changes when you actually build around it.
 
 It is not a library, a template, or production code. It exists to be read and run.
 
+## What Microsoft Foundry is
+
+Microsoft Foundry (formerly Azure AI Foundry) is Azure's platform for building with
+AI models. At its simplest it gives you a model endpoint. What it adds around that
+endpoint is what this lab is about: agents stored as named, versioned resources,
+conversations held by the service, evaluation, and the Azure identity, network and
+compliance boundary your organisation already has.
+
+The pieces you'll meet, from the outside in:
+
+| Piece | What it is | In this lab |
+|---|---|---|
+| **Foundry resource** | The Azure resource (`Microsoft.CognitiveServices/accounts`) that holds everything else. Lives in a resource group and a region | `$AZURE_FOUNDRY_RESOURCE` in `$AZURE_RESOURCE_GROUP` |
+| **Project** | A workspace inside the resource. Your code connects to a project, through its **project endpoint** | `$FOUNDRY_PROJECT_ENDPOINT` |
+| **Model deployment** | A model made callable under a name you choose, with a SKU (routing: global, data-zone) and a capacity in tokens per minute | `my-model` → gpt-5.4-mini, DataZoneStandard, 3K TPM |
+| **Quota** | What you're *allowed* to deploy, per model, SKU and region. Separate from what the catalogue lists | What the Ops step checks |
+| **Agent** | A named, versioned definition stored in the project: model + instructions (+ tools). Visible and editable in the portal | `lab-assistant`, `lab-assistant-csharp` |
+| **Conversation / session** | Message history held by the service, so each turn doesn't resend it | What the Run step shows |
+
+Two things that surprise people:
+
+- **Control plane and data plane authorise separately.** Creating the resource
+  (control plane, `az` / ARM) doesn't let you *use* it. Calling the project endpoint
+  (data plane) needs a Foundry user role on the project, even for a subscription
+  Owner.
+- **The portal is [ai.azure.com](https://ai.azure.com)**, not the general Azure
+  portal. Agents you publish show up there under your project → Agents.
+
+[`docs/foundry-notes.md`](docs/foundry-notes.md) goes further: what a server-side
+agent is, and why organisations adopt Foundry beyond inference.
+
+## Foundry or Copilot Studio?
+
+Both build agents on Microsoft's stack. Microsoft positions them as two build
+paths, for different builders and different levels of control.
+
+| | Copilot Studio | Microsoft Foundry |
+|---|---|---|
+| Kind of service | SaaS, part of Power Platform | PaaS, a resource in your Azure subscription |
+| How you build | Low/no-code, in the Copilot Studio designer | Pro-code with SDKs (Python, C#, Java…), or low-code prompt agents in the Foundry portal |
+| Typical builder | Business teams, makers | Developers |
+| Orchestration | Copilot Studio's own | Yours: a framework, your own code, or Foundry's agent service |
+| Models | Chosen by Copilot Studio; Foundry models can be added | Your choice from the Foundry catalogue (OpenAI, Anthropic, Meta, Mistral…), deployed with your quota |
+| Tools and data | Prebuilt connectors; native access to Microsoft 365 content | Your own code, OpenAPI, MCP, a tool catalogue; Microsoft 365 data through Graph |
+| Where it runs for users | Microsoft 365 Copilot, Teams, websites, mobile and partner apps | Your own applications; can be published to Microsoft 365 Copilot and Teams |
+| Billing | Copilot Studio licences and Copilot Credits | Azure consumption: model tokens and the tools you use. An idle agent costs nothing |
+| Governance | Power Platform admin | Azure RBAC, Policy, networking (private networking in the standard setup) |
+
+Microsoft's own example: an HR onboarding assistant that answers FAQs from
+content already in Microsoft 365 goes to **Copilot Studio**. An agent with
+custom AI logic and integrations, used in the company's own system and also
+surfaced in Microsoft 365, goes to **Foundry**. The two also combine: Copilot
+Studio can use Foundry models, and Foundry agents can be published into
+Microsoft 365.
+
+Microsoft's advice is to check first whether a ready-made agent (Microsoft 365
+Copilot, GitHub Copilot, Dynamics 365…) already covers the need. Only if none
+does, build one. If you do build, try both paths in short prototypes (one to two
+weeks each) and pick the lightest one that meets the requirements.
+
+**Why this lab uses Foundry:** it's about the code underneath an agent — the
+tool loop, versioned definitions, sessions — and about comparing that code across
+languages. Copilot Studio deliberately hides all of that.
+
+Sources (checked 2026-10-28): Microsoft Learn,
+[Custom engine agents for Microsoft 365](https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/overview-custom-engine-agent)
+and
+[Cloud Adoption Framework: technology plan for AI agents](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ai-agents/technology-solutions-plan-strategy).
+Licensing details change often; check
+[Copilot Studio licensing](https://learn.microsoft.com/en-us/microsoft-copilot-studio/requirements-licensing-subscriptions)
+before you plan a budget.
+
+## Getting a Foundry project
+
+You need a Foundry resource, a project, a chat-model deployment, and a data-plane
+role on the project. [`files/provision.sh`](files/provision.sh) does all of it
+with the Azure CLI, in eight commented steps:
+
+1. Sign in and select the subscription
+2. Register the resource providers (one-time, free)
+3. Create the resource group
+4. Create the Foundry resource (with project management enabled)
+5. Give it a custom subdomain (needed for Entra sign-in and for projects)
+6. Create the project
+7. Check quota, then deploy a chat model under the name your code will use
+8. Grant yourself the Foundry user role on the project
+
+```bash
+cp .env.example .env               # fill in tenant, subscription, and names you choose
+set -a && source .env && set +a
+zsh files/provision.sh             # safe to re-run
+```
+
+Then copy the project endpoint from **ai.azure.com → your project → overview**
+into `FOUNDRY_PROJECT_ENDPOINT` in `.env`. Copy it rather than building it by hand;
+its format has changed between versions.
+
+Before step 7, check which models you hold quota for in your region. Quota is
+granted per model, SKU and region, and a model can be in the catalogue with a
+limit of 0. The script prints your quota before deploying.
+
+Cost: nothing at rest. You pay per token for inference, and the whole lab costs
+well under one euro to run. Capacity runs out before money does: at 3K TPM, two
+runs back to back can return HTTP 429.
+
 ## The idea
 
 The same small agent is built **twice**, in two folders, using two different
@@ -50,11 +155,11 @@ Each language publishes its own agent, so cleaning up one never breaks another.
 
 ## Shared setup
 
-Requires the Azure CLI 2.67+ and a Foundry project with a chat model deployment.
-From the repo root:
+Requires the Azure CLI 2.67+ and a Foundry project with a chat model deployment
+(see [Getting a Foundry project](#getting-a-foundry-project)). From the repo root,
+with `.env` filled in:
 
 ```bash
-cp .env.example .env      # then fill in your own values — shared by every language
 set -a && source .env && set +a
 
 az login --tenant "$AZURE_TENANT_ID"
