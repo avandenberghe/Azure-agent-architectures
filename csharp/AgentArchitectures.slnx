@@ -1,5 +1,7 @@
 <Solution>
   <Project Path="FoundryNative.Cleanup/FoundryNative.Cleanup.csproj" />
+  <Project Path="FoundryNative.Publish/FoundryNative.Publish.csproj" />
+  <Project Path="FoundryNative.Run/FoundryNative.Run.csproj" />
   <Project Path="LocalAgent.Hello/LocalAgent.Hello.csproj" />
   <Project Path="LocalAgent.Ops/LocalAgent.Ops.csproj" />
   <Project Path="LocalAgent.Order/LocalAgent.Order.csproj" />

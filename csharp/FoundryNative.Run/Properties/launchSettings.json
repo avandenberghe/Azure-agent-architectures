@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "FoundryNative.Run": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "PATH": "/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+      },
+      "commandLineArgs": "1"
+    }
+  }
+}

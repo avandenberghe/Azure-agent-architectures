@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Agents.AI.Foundry" />
+    <PackageReference Include="Azure.AI.Projects" />
+    <PackageReference Include="Azure.AI.Extensions.OpenAI" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Shared/Shared.csproj" />
+  </ItemGroup>
+
+</Project>
