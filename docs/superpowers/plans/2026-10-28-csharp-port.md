@@ -1,5 +1,7 @@
 # C# Port of the Foundry Agent Lab — Implementation Plan
 
+> Historical record. This was carried out on 2026-10-28; the unchecked boxes below are the plan as written, not open work.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Move the Python lab into `python/`, add a C# version of all six lab steps in `csharp/`, and write `docs/language-comparison.md` setting the two side by side.

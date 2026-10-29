@@ -1,9 +1,9 @@
 # Foundry agent lab: C#
 
-The C# version of the lab: the same six steps as the [Python version](../python/README.md),
-with the same prompts, instructions and output. The project overview is in the
+The C# version of the lab: the same six steps as the [Python](../python/README.md)
+and [Java](../java/README.md) versions, with the same prompts, instructions and output. The project overview is in the
 [root README](../README.md). [`docs/language-comparison.md`](../docs/language-comparison.md)
-puts each step side by side with Python.
+puts each step side by side across the languages.
 
 Built on .NET 10, `Microsoft.Agents.AI.Foundry` and `Azure.AI.Projects`.
 
@@ -30,8 +30,8 @@ Solution-wide files:
 | `*/packages.lock.json` | Every transitive package, pinned. The C# counterpart of `python/constraints.txt` |
 | `*/Properties/launchSettings.json` | Puts `/opt/homebrew/bin` on PATH so `az` is found (see below) |
 
-C# publishes its own agent, `lab-assistant-csharp`. Python's is `lab-assistant`, so
-cleaning up one never breaks the other.
+C# publishes its own agent, `lab-assistant-csharp`. Python's is `lab-assistant` and
+Java's is `lab-assistant-java`, so cleaning up one never touches the others.
 
 ## Setup
 

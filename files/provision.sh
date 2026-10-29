@@ -10,7 +10,7 @@
 set -eu   # abort on error or unset variable
 
 # ---------------------------------------------------------------------
-# Settings — read from .env. Run:  set -a && source ../.env && set +a
+# Settings — read from .env. From the repo root:  set -a && source .env && set +a
 # Nothing here is hardcoded, so this file is safe in a public repo.
 # ---------------------------------------------------------------------
 TENANT="${AZURE_TENANT_ID:?set it in .env — az account show --query tenantId -o tsv}"

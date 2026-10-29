@@ -1,5 +1,7 @@
 # C# port of the Foundry agent lab — design
 
+> Historical record. This was carried out on 2026-10-28; the unchecked boxes below are the plan as written, not open work.
+
 Date: 2026-10-28
 Status: awaiting approval (builder check done)
 

@@ -132,7 +132,7 @@ graph TB
 | `hello_agent.py` | Python 3.14, asyncio | Baseline: proves credentials, endpoint and deployment all work |
 | `order_agent.py` | Python 3.14, asyncio | Demonstrates tool invocation; the tool body is a hardcoded return |
 | `ops_agent.py` | Python 3.14, asyncio, subprocess | The only script that reads real system state, and the only one spanning both planes |
-| `.env` | dotenv | Two variables. Loaded from the **working directory**, not the script location |
+| `.env` | dotenv | Endpoint and deployment, plus the resource, group and region that `ops_agent.py` needs. `load_dotenv()` walks up from the **script's folder**, so the scripts run from any working directory |
 | `.venv` | virtualenv | Deliberately `agent-framework-foundry`, not `agent-framework` — see below |
 
 **(A2) Every container is a local script.** In a Foundry-centric design the agent

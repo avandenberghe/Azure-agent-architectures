@@ -3,8 +3,8 @@
 Reference material on what Microsoft Foundry offers beyond the inference endpoint
 this project uses. Moved out of `CLAUDE.md`, which should stay operational.
 
-See also: `docs/architecture.md` for what this project's architecture actually is,
-and the assessment section in `CLAUDE.md` for why it is not yet a Foundry tutorial.
+See also: `docs/architecture.md` for the local architecture and why it is not
+Foundry-centric, and `docs/architecture2.md` for the Foundry-native one that answers it.
 
 ## What a server-side agent actually is
 
@@ -32,7 +32,7 @@ than creating it in Python. `agent_version` is the load-bearing parameter:
 It also exposes `create_conversation()` and `create_session()` — conversation
 state held by the service instead of by the caller.
 
-`client.as_agent()`, which all three scripts use, has none of this. It is an
+`client.as_agent()`, which the `python/local_agent/` scripts use, has none of this. It is an
 in-memory object; when the process exits, the agent never existed.
 
 ## Why organisations use Foundry beyond inference

@@ -252,8 +252,9 @@ old one, which is what makes rollback possible.
   but it is exactly the object Foundry stores.
 - Microsoft's docs call this a "prompt agent". In the stable C# package
   (`Azure.AI.Projects.Agents` 2.0.0) the type is named `DeclarativeAgentDefinition`.
-- **One agent per language.** Python publishes `lab-assistant` and C# publishes
-  `lab-assistant-csharp`, so deleting one never breaks the other. Nothing ties
+- **One agent per language.** Python publishes `lab-assistant`, C# publishes
+  `lab-assistant-csharp` and Java publishes `lab-assistant-java`, so deleting one
+  never breaks the others. Nothing ties
   an agent to a language, though: it is a project resource, and C#'s `Run` could
   reference Python's agent by name just as well.
 - Java's type is `PromptAgentDefinition`, the name Microsoft's docs use.

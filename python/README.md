@@ -2,7 +2,7 @@
 
 The Python version of the lab. The project overview is in the [root README](../README.md).
 [`docs/language-comparison.md`](../docs/language-comparison.md) puts each step side by
-side with the C# version.
+side with the C# and Java versions.
 
 Built on `agent-framework-foundry` (`agent_framework.foundry`) and `azure-ai-projects`.
 

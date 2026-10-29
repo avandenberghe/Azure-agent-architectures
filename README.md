@@ -21,7 +21,7 @@ The pieces you'll meet, from the outside in:
 | **Project** | A workspace inside the resource. Your code connects to a project, through its **project endpoint** | `$FOUNDRY_PROJECT_ENDPOINT` |
 | **Model deployment** | A model made callable under a name you choose, with a SKU (routing: global, data-zone) and a capacity in tokens per minute | `my-model` → gpt-5.4-mini, DataZoneStandard, 3K TPM |
 | **Quota** | What you're *allowed* to deploy, per model, SKU and region. Separate from what the catalogue lists | What the Ops step checks |
-| **Agent** | A named, versioned definition stored in the project: model + instructions (+ tools). Visible and editable in the portal | `lab-assistant`, `lab-assistant-csharp` |
+| **Agent** | A named, versioned definition stored in the project: model + instructions (+ tools). Visible and editable in the portal | `lab-assistant`, `lab-assistant-csharp`, `lab-assistant-java` |
 | **Conversation / session** | Message history held by the service, so each turn doesn't resend it | What the Run step shows |
 
 Two things that surprise people:
